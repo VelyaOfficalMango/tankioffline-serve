@@ -1,0 +1,15 @@
+# Конфигурация для Amvera Cloud (https://amvera.ru)
+# Сборка из Dockerfile; игра слушает порт 8080 (см. run.containerPort).
+# Данные (аккаунты/баны/банворды/правила) пишутся в /data — этот каталог Amvera
+# сохраняет между перезапусками и редеплоями (persistenceMount).
+#
+# После создания проекта в Amvera задайте переменные окружения (Настройки → Переменные):
+#   ADMIN_KEY  — ключ админ-панели /admin.html (ОБЯЗАТЕЛЬНО, длинный случайный)
+#   Опционально: AUTH_PER_MIN, AUTH_GLOBAL_PER_MIN, ALLOWED_ORIGINS, RESTART_HOURS
+meta:
+  environment: docker
+  toolchain:
+    name: docker
+run:
+  containerPort: 8080
+  persistenceMount: /data

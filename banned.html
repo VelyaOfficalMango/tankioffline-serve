@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Аккаунт заблокирован</title>
+<style>
+/* ============================================================
+   Страница блокировки — красный бархат.
+   ЗАМЕНИТЕ APPEAL_URL на свою ссылку для апелляций (Telegram/VK/форма).
+   ============================================================ */
+:root{--gold:#f0d58c;--gold-dim:#c9ab63;--ink:#f7ecec;--muted:#e3b8b8;--line:rgba(240,213,140,.35)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%}
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;color:var(--ink);
+  background:
+    radial-gradient(ellipse 120% 70% at 50% -10%, rgba(255,64,64,.28), transparent 62%),
+    radial-gradient(ellipse 90% 60% at 50% 115%, rgba(0,0,0,.65), transparent 60%),
+    linear-gradient(158deg,#5a1010 0%,#3a0808 45%,#240404 100%);
+  background-attachment:fixed;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+}
+/* бархатная фактура: шум + диагональный отлив ворса */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(115deg, rgba(255,255,255,.022) 0 2px, transparent 2px 7px);}
+.scene{position:relative;z-index:2;width:min(560px,100%)}
+.card{
+  background:linear-gradient(170deg, rgba(58,10,10,.92), rgba(30,4,4,.95));
+  border:1px solid var(--line);border-radius:18px;
+  box-shadow:0 30px 80px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,200,160,.14);
+  padding:38px 36px 30px;text-align:center;
+}
+.seal{
+  width:84px;height:84px;margin:0 auto 16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:38px;
+  background:radial-gradient(circle at 34% 28%, #8c1d1d, #4d0b0b 68%);
+  border:2px solid var(--line);
+  box-shadow:0 10px 26px rgba(0,0,0,.55), inset 0 2px 6px rgba(255,120,120,.28);
+}
+h1{font-size:24px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);
+  text-shadow:0 2px 10px rgba(0,0,0,.6);margin-bottom:6px}
+.sub{color:var(--muted);font-size:12.5px;letter-spacing:.5px;margin-bottom:20px}
+.notation{
+  text-align:left;background:rgba(0,0,0,.30);border:1px solid rgba(240,213,140,.18);
+  border-radius:12px;padding:14px 16px;font-size:12.8px;line-height:1.65;color:var(--ink);
+  margin-bottom:18px;
+}
+.notation b{color:var(--gold)}
+.notation ul{list-style:none;margin-top:7px}
+.notation li{padding-left:18px;position:relative;margin-top:3px;color:var(--muted)}
+.notation li::before{content:'✦';position:absolute;left:2px;color:var(--gold-dim);font-size:10px;top:2px}
+.rows{margin-bottom:22px}
+.row{
+  display:flex;justify-content:space-between;align-items:baseline;gap:14px;text-align:left;
+  padding:10px 4px;border-bottom:1px solid rgba(240,213,140,.14);font-size:13.5px;
+}
+.row span{color:var(--muted);letter-spacing:.5px}
+.row b{color:var(--gold);font-size:14.5px;text-align:right;word-break:break-word}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+button,a.btn{
+  font-family:inherit;font-weight:700;font-size:13px;letter-spacing:.6px;
+  padding:11px 22px;border-radius:10px;cursor:pointer;text-decoration:none;
+  transition:.16s;display:inline-block;
+}
+#del{background:linear-gradient(180deg,#7e1a1a,#521010);border:1px solid #a53434;color:#ffe3e3}
+#del:hover{background:linear-gradient(180deg,#962020,#631414);border-color:#c85252}
+#del:disabled{opacity:.45;cursor:default}
+.appeal{background:linear-gradient(180deg,#2c1414,#1d0d0d);border:1px solid var(--line);color:var(--gold)}
+.appeal:hover{border-color:var(--gold);color:#ffeec2}
+.note{min-height:18px;margin-top:16px;font-size:12.5px;color:var(--muted)}
+.note.ok{color:#b8e6b8}
+@media (max-width:480px){.card{padding:28px 20px 24px}h1{font-size:19px;letter-spacing:1.5px}}
+</style>
+</head>
+<body>
+<div class="scene"><div class="card">
+    <div class="seal">🚫</div>
+    <h1>Ваш аккаунт заблокирован</h1>
+    <div class="sub">Доступ к игре закрыт администрацией сервера</div>
+
+    <div class="notation">
+        <b>Наказание выдано за нарушение правил сервера.</b> К таким нарушениям относятся:
+        <ul>
+            <li>продажа, реклама или обсуждение наркотиков и запрещённых веществ — <b>бан навсегда</b>;</li>
+            <li>угрозы реальной расправой, призывы к насилию и терроризму — <b>бан навсегда</b>;</li>
+            <li>мошенничество, продажа и взлом аккаунтов;</li>
+            <li>читы, багоюз и вмешательство в работу сервера;</li>
+            <li>оскорбления, травля, спам и флуд в чате;</li>
+            <li>обход бана новым аккаунтом — бан продлевается на IP.</li>
+        </ul>
+    </div>
+
+    <div class="rows">
+        <div class="row"><span>Причина</span><b id="reason">уточняется</b></div>
+        <div class="row"><span>Осталось до разбана</span><b id="left">—</b></div>
+    </div>
+
+    <div class="actions">
+        <button id="del" type="button">Удалить аккаунт</button>
+        <a class="appeal" id="appeal" href="https://t.me/tanki_appeal" target="_blank" rel="noopener">Апелляция</a>
+    </div>
+    <div class="note" id="msg"></div>
+</div></div>
+<script>
+/* ССЫЛКА ДЛЯ АПЕЛЛЯЦИЙ — поменяйте на свою (Telegram/VK/форма) */
+const APPEAL_URL = 'https://t.me/tanki_appeal';
+
+const $ = id => document.getElementById(id);
+$('appeal').href = APPEAL_URL;
+
+function fmtLeft(ms){
+    if (ms <= 0) return 'никогда';
+    const s = Math.ceil(ms / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    const parts = [];
+    if (d) parts.push(d + ' дн');
+    if (h) parts.push(h + ' ч');
+    if (m && !d) parts.push(m + ' мин');
+    if (!d && !h && sec) parts.push(sec + ' сек');
+    return parts.join(' ') || 'меньше секунды';
+}
+let until = null;   // 0 = навсегда
+function tick(){
+    if (until === null) return;
+    $('left').textContent = (until === 0) ? 'никогда' : fmtLeft(until * 1000 - Date.now());
+}
+setInterval(tick, 1000);
+
+function apply(info){
+    $('reason').textContent = (info && info.reason && String(info.reason).trim()) || 'нарушение правил сервера';
+    until = (info && typeof info.until === 'number' && info.until > 0) ? info.until : 0;
+    tick();
+    // кнопка удаления имеет смысл, только если известна сессия аккаунта
+    $('del').disabled = !(info && info.hasAccount);
+}
+
+(async () => {
+    // 1) свежие данные после редиректа с формы входа (сессии там ещё нет)
+    let info = null;
+    try { info = JSON.parse(sessionStorage.getItem('tk_baninfo') || 'null'); } catch (e) {}
+    try { sessionStorage.removeItem('tk_baninfo'); } catch (e) {}
+    // 2) иначе спрашиваем сервер: сначала по токену (бан аккаунта), потом по IP
+    if (!info || !info.banned) {
+        try {
+            const r = await fetch('/api/baninfo', { method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: localStorage.getItem('tk_token') || null }) });
+            const j = await r.json();
+            if (j && j.ok && j.banned) info = j;
+        } catch (e) {}
+    }
+    apply(info || { reason: '', until: 0, hasAccount: !!localStorage.getItem('tk_token') });
+})();
+
+$('del').addEventListener('click', async () => {
+    if (!confirm('Удалить аккаунт со всеми прогрессами безвозвратно?')) return;
+    const btn = $('del');
+    btn.disabled = true;
+    try {
+        const r = await fetch('/api/delete_account', { method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: localStorage.getItem('tk_token') || null }) });
+        const j = await r.json();
+        const msg = $('msg');
+        if (j && j.ok) {
+            localStorage.removeItem('tk_token');
+            msg.textContent = 'Аккаунт удалён. Апелляция по удалению — по ссылке выше.';
+            msg.className = 'note ok';
+        } else {
+            msg.textContent = (j && j.err) ? j.err : 'Не удалось удалить: войдите в игру и попробуйте снова.';
+            btn.disabled = false;
+        }
+    } catch (e) {
+        $('msg').textContent = 'Ошибка соединения с сервером';
+        btn.disabled = false;
+    }
+});
+</script>
+</body>
+</html>

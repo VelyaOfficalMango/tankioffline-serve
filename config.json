@@ -1,0 +1,19 @@
+{
+  "host": "0.0.0.0",
+  "port": 8080,
+  "room_capacity": 16,
+  "match_end_delay": 12,
+  "max_msg_per_sec": 90,
+  "max_conn_per_ip": 8,
+  "allowed_origins": [],
+  "static_dir": ".",
+  "data_dir": "data",
+  "auth_required": true,
+  "session_days": 7,
+  "pbkdf2_iters": 200000,
+  "auth_per_min": 10,
+  "auth_global_per_min": 120,
+  "admin_key": "test",
+  "trust_proxy": false,
+  "restart_hours": 6
+}

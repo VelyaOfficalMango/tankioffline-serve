@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>TANKI — Админ-панель v2</title>
+<style>
+:root{--bg:#0b0e14;--p:rgba(13,18,30,.92);--l:rgba(148,163,184,.2);--t:#e6ecfa;--m:#93a3bd;--g:#4ade80;--r:#f87171;--y:#fbbf24;--b:#38bdf8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--t);font-family:'Segoe UI',system-ui,sans-serif;padding:18px;min-height:100vh}
+h1{font-size:20px;letter-spacing:2px;margin-bottom:4px}
+.sub{color:var(--m);font-size:12px;margin-bottom:16px}
+.card{background:var(--p);border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:14px}
+.card h2{font-size:13px;letter-spacing:1.5px;color:var(--m);text-transform:uppercase;margin-bottom:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,select{background:#101622;border:1px solid var(--l);border-radius:8px;color:var(--t);padding:8px 10px;font-size:13px;outline:none}
+input:focus{border-color:var(--b)}
+button{background:#1a2a1a;border:1px solid #2a5a2a;color:#cfe;padding:8px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-size:12.5px;transition:.15s}
+button:hover{border-color:#5aba5a;background:#223422}
+button.red{background:#2a1414;border-color:#8a2a2a;color:#fcc}
+button.red:hover{background:#3a1a1a;border-color:#c33}
+button.sm{padding:4px 9px;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:var(--m);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--l)}
+td{padding:6px 8px;border-bottom:1px solid rgba(148,163,184,.08)}
+tr:hover td{background:rgba(56,189,248,.05)}
+.badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:800}
+.b-ok{background:rgba(74,222,128,.15);color:var(--g)}
+.b-ban{background:rgba(248,113,113,.15);color:var(--r)}
+.b-play{background:rgba(56,189,248,.15);color:var(--b)}
+.b-idle{background:rgba(148,163,184,.12);color:var(--m)}
+.b-warn{background:rgba(251,191,36,.15);color:var(--y)}
+.b-pin{background:rgba(148,163,184,.18);color:#cbd5e1}
+.stat{display:flex;gap:14px;flex-wrap:wrap}
+.stat div{background:#101622;border:1px solid var(--l);border-radius:10px;padding:10px 16px;min-width:110px}
+.stat b{display:block;font-size:22px;color:var(--y)}
+.stat span{font-size:10.5px;color:var(--m);letter-spacing:1px;text-transform:uppercase}
+#keybox{max-width:520px;margin:80px auto;text-align:center}
+#keybox input{width:100%;margin:12px 0}
+.err{color:var(--r);font-size:12px;min-height:16px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tabs button{border-radius:8px 8px 0 0;padding:9px 16px}
+.tabs button.act{background:#223422;border-color:#5aba5a;color:#fff}
+.tbl-wrap{max-height:420px;overflow-y:auto;border:1px solid var(--l);border-radius:8px}
+.tbl-wrap.tall{max-height:520px}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#333;border-radius:4px}
+.toast{position:fixed;right:18px;bottom:18px;background:#14202e;border:1px solid var(--b);color:#bfe6ff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:.3s;z-index:99}
+.toast.show{opacity:1}
+.clog{display:flex;gap:8px;align-items:baseline}
+.clog .tm{color:#64748b;font-size:10.5px;flex-shrink:0}
+.clog .who{font-weight:800;flex-shrink:0;cursor:pointer}
+.clog .who:hover{text-decoration:underline}
+.clog .tx{word-break:break-word;flex:1}
+.a-ok{color:#e5edf9}.a-block{color:#fbbf24}.a-censor{color:#fbbf24}.a-mute{color:#fb923c}.a-ban{color:#f87171}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.setgrid label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--m);letter-spacing:.5px;text-transform:uppercase}
+.setgrid input{width:100%}
+textarea{width:100%;background:#101622;border:1px solid var(--l);border-radius:8px;color:var(--t);padding:10px;font-size:13px;outline:none;font-family:inherit;resize:vertical}
+.hit{background:#14202e;border:1px solid var(--b);border-radius:8px;padding:8px 12px;font-size:12.5px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="keybox" class="card">
+    <h1>🔐 АДМИН-ПАНЕЛЬ TANKI</h1>
+    <div class="sub">Введите админ-ключ (ADMIN_KEY из config.json или переменной окружения)</div>
+    <input type="password" id="key" placeholder="admin key" onkeydown="if(event.key==='Enter')login()">
+    <div class="err" id="keyerr"></div>
+    <button onclick="login()">ВОЙТИ</button>
+</div>
+
+<div id="panel" style="display:none">
+    <h1>⚙️ АДМИН-ПАНЕЛЬ TANKI</h1>
+    <div class="sub" id="meta"></div>
+
+    <div class="tabs" id="tabs">
+        <button data-tab="ov" class="act">Обзор</button>
+        <button data-tab="pl">Игроки онлайн</button>
+        <button data-tab="acc">Аккаунты</button>
+        <button data-tab="mod">🛡 Модерация чата</button>
+        <button data-tab="clog">Чат-лог</button>
+        <button data-tab="mlog">Журнал</button>
+        <button data-tab="rules">Правила</button>
+        <button data-tab="rooms">Комнаты</button>
+        <button data-tab="bans">Баны</button>
+        <button data-tab="news">Новости</button>
+    </div>
+
+    <!-- ================= ОБЗОР ================= -->
+    <div id="tab-ov">
+        <div class="card"><div class="stat" id="stats"></div></div>
+        <div class="card">
+            <h2>Управление</h2>
+            <div class="row">
+                <input id="bc-text" placeholder="Сообщение всем игрокам…" style="flex:1;min-width:220px">
+                <button onclick="broadcast()">📣 Отправить всем</button>
+                <button onclick="save()">💾 Сохранить данные</button>
+                <button onclick="refresh(true)">🔄 Обновить</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+                <input id="pm-id" type="number" placeholder="ID игрока" style="width:120px">
+                <input id="pm-text" placeholder="Личное сообщение игроку…" style="flex:1;min-width:220px">
+                <button onclick="pm()">💌 Личное сообщение</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+                <button class="red" onclick="restartSrv()">🔁 Перезапустить сервер…</button>
+                <button onclick="cancelRestart()">↩ Вернуть плановый перезапуск</button>
+                <span class="sub" style="margin:0">Игроки получают предупреждение и переподключаются сами. Данные сохраняются.</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Быстрый бан</h2>
+            <div class="row">
+                <input id="ban-name" placeholder="Имя или логин игрока" style="width:200px">
+                <input id="ban-hours" type="number" value="24" min="0" style="width:90px" title="Часов (0 = навсегда)">
+                <input id="ban-reason" placeholder="Причина" style="flex:1;min-width:160px">
+                <button class="red" onclick="banByName()">🚫 Забанить по имени</button>
+                <button class="red" onclick="warnByName()">⚠️ Варн по имени</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ИГРОКИ ОНЛАЙН ================= -->
+    <div id="tab-pl" style="display:none">
+        <div class="card">
+            <h2>Онлайн (<span id="pcount">0</span>)</h2>
+            <div class="tbl-wrap"><table id="players"></table></div>
+        </div>
+    </div>
+
+    <!-- ================= АККАУНТЫ ================= -->
+    <div id="tab-acc" style="display:none">
+        <div class="card">
+            <h2>Аккаунты</h2>
+            <div class="row" style="margin-bottom:10px">
+                <input id="acc-search" placeholder="Поиск: логин / имя / ID" style="flex:1;min-width:200px" oninput="renderAccounts()">
+                <span class="sub" style="margin:0">⚠️ = варны, 🔇 = мут, 🚫 = бан</span>
+            </div>
+            <div class="tbl-wrap tall"><table id="accounts"></table></div>
+        </div>
+    </div>
+
+    <!-- ================= МОДЕРАЦИЯ ЧАТА ================= -->
+    <div id="tab-mod" style="display:none">
+        <div class="card">
+            <h2>Запрещённые слова (проверка мгновенная, обходит транслит/цифры/пробелы)</h2>
+            <div class="row" style="margin-bottom:10px">
+                <input id="bw-word" placeholder="слово или фраза" style="width:220px">
+                <select id="bw-action">
+                    <option value="block">block — блок + варн</option>
+                    <option value="censor">censor — замазать ***</option>
+                    <option value="mute">mute — блок + мут</option>
+                    <option value="ban">ban — блок + бан</option>
+                </select>
+                <button onclick="bwAdd()">➕ Добавить</button>
+                <input id="bw-test" placeholder="проверить сообщение…" style="flex:1;min-width:180px">
+                <button onclick="bwTest()">🧪 Тест фильтра</button>
+            </div>
+            <div id="bw-hits"></div>
+            <div class="tbl-wrap tall"><table id="banwords"></table></div>
+        </div>
+        <div class="card">
+            <h2>Настройки авто-модерации</h2>
+            <div class="setgrid" id="modset"></div>
+            <div class="row" style="margin-top:12px">
+                <button onclick="modsetSave()">💾 Сохранить настройки</button>
+                <span class="sub" style="margin:0">Эскалация: N варнов → мут → бан → вечный бан. Варны сгорают через указанные часы.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ЧАТ-ЛОГ ================= -->
+    <div id="tab-clog" style="display:none">
+        <div class="card">
+            <h2>Журнал чата (последние сообщения, фильтр по действию)</h2>
+            <div class="row" style="margin-bottom:10px">
+                <select id="clog-filter" onchange="renderChatlog()">
+                    <option value="">все</option>
+                    <option value="ok">обычные</option>
+                    <option value="block">заблокированные</option>
+                    <option value="censor">замазанные</option>
+                    <option value="mute">мут</option>
+                    <option value="ban">бан</option>
+                </select>
+                <button class="red sm" onclick="act('chatlog_clear')">🗑 Очистить журнал чата</button>
+            </div>
+            <div class="tbl-wrap tall"><div id="chatlog" style="padding:8px 10px;display:flex;flex-direction:column;gap:4px;font-size:12.5px"></div></div>
+        </div>
+    </div>
+
+    <!-- ================= ЖУРНАЛ МОДЕРАЦИИ ================= -->
+    <div id="tab-mlog" style="display:none">
+        <div class="card">
+            <h2>Журнал модерации и админ-действий</h2>
+            <div class="row" style="margin-bottom:10px">
+                <button class="red sm" onclick="act('modlog_clear')">🗑 Очистить журнал</button>
+            </div>
+            <div class="tbl-wrap tall"><table id="modlog"></table></div>
+        </div>
+    </div>
+
+    <!-- ================= ПРАВИЛА ================= -->
+    <div id="tab-rules" style="display:none">
+        <div class="card">
+            <h2>Правила сервера (кнопка «ПРАВИЛА» в лобби у игроков)</h2>
+            <div class="sub" style="margin-bottom:8px">Одна строка — одно правило. Формат: текст | наказание (наказание необязательно).</div>
+            <textarea id="rules-edit" rows="14" placeholder="Продажа наркотиков запрещена | БАН НАВСЕГДА"></textarea>
+            <div class="row" style="margin-top:10px">
+                <button onclick="saveRules()">⚖️ Сохранить правила (игрокам придёт сразу)</button>
+                <button onclick="loadRulesBox()">↩ Загрузить текущие</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= КОМНАТЫ ================= -->
+    <div id="tab-rooms" style="display:none">
+        <div class="card">
+            <h2>Комнаты</h2>
+            <div class="tbl-wrap"><table id="rooms"></table></div>
+        </div>
+    </div>
+
+    <!-- ================= БАНЫ ================= -->
+    <div id="tab-bans" style="display:none">
+        <div class="card">
+            <h2>Баны</h2>
+            <div class="row" style="margin-bottom:10px">
+                <input id="ban-ip" placeholder="IP для бана" style="width:170px">
+                <input id="ban-ip-hours" type="number" value="24" min="0" style="width:80px" title="Часов (0 = навсегда)">
+                <input id="ban-ip-reason" placeholder="Причина" style="flex:1;min-width:160px">
+                <button class="red" onclick="banIp()">🚫 Бан IP</button>
+            </div>
+            <div class="tbl-wrap tall"><table id="bans"></table></div>
+        </div>
+    </div>
+
+    <!-- ================= НОВОСТИ ================= -->
+    <div id="tab-news" style="display:none">
+        <div class="card">
+            <h2>Новости (лента в игре)</h2>
+            <div class="sub" style="margin-bottom:8px">Одна строка — одна новость. Формат: [kind] текст, kind = info / ok / bad / gift (необязательно).</div>
+            <textarea id="news-edit" rows="9" placeholder="[ok] Сервер обновлён до версии 1.1&#10;Новый режим: Осада&#10;[gift] Двойные кристаллы в выходные"></textarea>
+            <div class="row" style="margin-top:10px">
+                <button onclick="saveNews()">📰 Сохранить новости (игрокам придёт сразу)</button>
+                <button onclick="loadNewsBox()">↩ Загрузить текущие</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+let _memkey = null;   // запасное хранилище ключа, если localStorage недоступен
+const KEY = () => _memkey !== null ? _memkey : (localStorage.getItem('tk_admin') || '');
+function setKey(v){ _memkey = v; try { localStorage.setItem('tk_admin', v); } catch (e) {} }
+let TAB = 'ov';
+let S = null;   // последний state
+function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2600); }
+async function api(path, body){
+    const r = await fetch('/api/admin/'+path, { method: body?'POST':'GET',
+        headers: {'X-Admin-Key': KEY(), 'Content-Type':'application/json'},
+        body: body?JSON.stringify(body):undefined });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.err || 'ошибка');
+    return j;
+}
+async function login(){
+    setKey(document.getElementById('key').value.trim());
+    document.getElementById('keyerr').textContent = '';
+    try { await refresh(true); document.getElementById('keybox').style.display='none'; document.getElementById('panel').style.display='block'; }
+    catch(e){ setKey(''); document.getElementById('keyerr').textContent = 'Ошибка: ' + (e && e.message ? e.message : 'неверный ключ'); }
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtTime(s){ s=Math.max(0,s|0); const h=(s/3600)|0,m=((s%3600)/60)|0; return (h?h+'ч ':'')+m+'м'; }
+function fmtLeft(s){ s=Math.max(0,s|0); if(s<90) return s+' с'; return fmtTime(s); }
+function fmtWhen(ts){ return ts? new Date(ts*1000).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : ''; }
+
+// ---------- вкладки
+document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => {
+    TAB = b.dataset.tab;
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('act', x === b));
+    ['ov','pl','acc','mod','clog','mlog','rules','rooms','bans','news'].forEach(t =>
+        document.getElementById('tab-'+t).style.display = (t === TAB ? '' : 'none'));
+    if (TAB === 'rules') loadRulesBox();
+    if (TAB === 'news') loadNewsBox();
+    if (TAB === 'mod') renderBanwords();
+    if (S) renderAll();
+}));
+
+// ---------- общий refresh
+async function refresh(throwOnError){
+    try { S = await api('state'); }
+    catch(e){
+        if (throwOnError) throw e;
+        toast('Ошибка: '+e.message); return;
+    }
+    renderAll();
+}
+function renderAll(){
+    const meta = document.getElementById('meta');
+    meta.textContent = 'аптайм '+fmtTime(S.uptime)+' · соединений: '+S.conns+
+        (S.restart_in!=null ? ' · перезапуск через '+fmtLeft(S.restart_in) : ' · плановый перезапуск выключен');
+    renderStats(); renderPlayers(); renderRooms(); renderAccounts();
+    renderBans(); renderBanwords(); renderChatlog(); renderModlog(); renderModset();
+    if (TAB === 'rules') loadRulesBox();
+    if (TAB === 'news') loadNewsBox();
+}
+function renderStats(){
+    const muted = S.accounts.filter(a => a.muted).length;
+    const warns = S.accounts.reduce((a, x) => a + (x.warns||0), 0);
+    document.getElementById('stats').innerHTML =
+        `<div><b>${S.conns}</b><span>онлайн</span></div>`+
+        `<div><b>${S.rooms.reduce((a,r)=>a+r.n,0)}</b><span>в боях</span></div>`+
+        `<div><b>${S.rooms.filter(r=>r.st==='play').length}</b><span>матчей</span></div>`+
+        `<div><b>${S.accounts.length}</b><span>аккаунтов</span></div>`+
+        `<div><b>${Object.keys(S.bans.ip||{}).length + Object.keys(S.bans.acc||{}).length}</b><span>банов</span></div>`+
+        `<div><b>${warns}</b><span>активных варнов</span></div>`+
+        `<div><b>${muted}</b><span>в муте</span></div>`+
+        `<div><b>${(S.banwords||[]).length}</b><span>банвордов</span></div>`;
+}
+
+// ---------- игроки онлайн
+function renderPlayers(){
+    document.getElementById('pcount').textContent = S.players.length;
+    document.getElementById('players').innerHTML =
+        '<tr><th>ID</th><th>Имя</th><th>Акк</th><th>IP</th><th>Комната</th><th>У/С</th><th>Действия</th></tr>' +
+        (S.players.map(p=>`<tr><td>${p.id}</td><td>${esc(p.n)}</td><td>${p.acc||'—'}</td><td>${esc(p.ip)}</td>`+
+        `<td>${p.room?`<span class="badge b-play">${esc(p.room)}</span>`:`<span class="badge b-idle">лобби</span>`}</td>`+
+        `<td>${p.k}/${p.d}</td><td>`+
+        `<button class="sm red" title="Кик" onclick="kick(${p.id})">Кик</button> `+
+        `<button class="sm red" title="Убить в бою" onclick="kill(${p.id})">☠</button> `+
+        `<button class="sm" title="Переместить в комнату (пусто = лобби)" onclick="move(${p.id})">➡</button> `+
+        `<button class="sm" title="Личное сообщение" onclick="pmTo(${p.id},'${esc(p.n)}')">💬</button> `+
+        `<button class="sm" title="Предупреждение" onclick="warnAid(${p.acc},'${esc(p.n)}')">⚠️</button> `+
+        `<button class="sm red" title="Бан аккаунта" onclick="banAcc(${p.acc})">🚫</button> `+
+        `<button class="sm red" title="Бан IP" onclick="banIp('${esc(p.ip)}')">Бан IP</button>`+
+        `</td></tr>`).join('') || '<tr><td colspan="7" style="color:#64748b">Пусто</td></tr>');
+}
+
+// ---------- комнаты
+function renderRooms(){
+    document.getElementById('rooms').innerHTML =
+        '<tr><th>Режим</th><th>Игроки</th><th>Счёт</th><th>Карта</th><th>Время</th><th>Статус</th><th></th></tr>' +
+        (S.rooms.map(r=>`<tr><td><b>${esc(r.id)}</b></td><td>${r.n}/${r.cap}</td>`+
+        `<td>${r.team?`${r.b}:${r.r}`:'—'}</td><td>${esc(r.map)}</td><td>${fmtTime(r.tl)}</td>`+
+        `<td><span class="badge ${r.st==='play'?'b-play':'b-idle'}">${r.st==='play'?'идёт бой':'ожидание'}</span></td>`+
+        `<td>${r.n?'<button class="sm red" onclick="roomClose(\''+esc(r.id)+'\')">Закрыть</button>':''}</td></tr>`).join(''));
+}
+
+// ---------- аккаунты
+function renderAccounts(){
+    const q = (document.getElementById('acc-search').value || '').toLowerCase();
+    const list = S.accounts.filter(a => !q || a.login.toLowerCase().includes(q) ||
+        String(a.name).toLowerCase().includes(q) || String(a.id) === q);
+    document.getElementById('accounts').innerHTML =
+        '<tr><th>ID</th><th>Логин</th><th>Имя</th><th>💎</th><th>Боёв</th><th>Побед</th><th>Убийств</th><th>Варны</th><th>Действия</th></tr>' +
+        (list.map(a=>{
+            const flags = (a.warns?' <span class="badge b-warn">⚠️'+a.warns+'</span>':'')+
+                          (a.muted?' <span class="badge b-ban">мут</span>':'')+
+                          (a.banned?' <span class="badge b-ban">бан</span>':'');
+            return `<tr><td>${a.id}</td><td>${esc(a.login)}</td><td>${esc(a.name)}${flags}</td>`+
+            `<td>${a.crystals||0}</td><td>${a.games}</td><td>${a.wins}</td><td>${a.kills}</td><td>${a.warns||0}</td><td>`+
+            (a.banned?`<button class="sm" onclick="unbanAcc(${a.id})">Разбан</button>`:`<button class="sm red" onclick="banAcc(${a.id})">Бан</button>`)+
+            ` <button class="sm" title="Выдать/забрать кристаллы" onclick="giveCrystals(${a.id})">💎</button>`+
+            ` <button class="sm" title="Переименовать" onclick="renameAcc(${a.id},'${esc(a.name)}')">✏️</button>`+
+            ` <button class="sm" title="Варн" onclick="warnAid(${a.id},'${esc(a.name)}')">⚠️</button>`+
+            (a.muted?` <button class="sm" title="Снять мут" onclick="unmuteAcc(${a.id})">🔊</button>`:` <button class="sm red" title="Мут чата" onclick="muteAcc(${a.id})">🔇</button>`)+
+            ` <button class="sm" title="Сбросить варны" onclick="clearWarns(${a.id})">🧹</button>`+
+            ` <button class="sm red" onclick="delAcc(${a.id},'${esc(a.login)}')">Удалить</button></td></tr>`;
+        }).join('') || '<tr><td colspan="9" style="color:#64748b">Ничего не найдено</td></tr>');
+}
+
+// ---------- баны
+function renderBans(){
+    const ipB = Object.entries(S.bans.ip||{}).map(([ip,v])=>({t:'IP',k:ip,v}));
+    const acB = Object.entries(S.bans.acc||{}).map(([aid,v])=>({t:'Акк',k:aid,v}));
+    document.getElementById('bans').innerHTML =
+        '<tr><th>Тип</th><th>Кого</th><th>Причина</th><th>До</th><th></th></tr>' +
+        (ipB.concat(acB).map(b=>{
+            const until = b.v.until===0?'НАВСЕГДА':new Date(b.v.until*1000).toLocaleString();
+            const who = b.t==='IP'?b.k:'акк #'+b.k;
+            return `<tr><td>${b.t}</td><td><b>${esc(who)}</b></td><td>${esc(b.v.reason||'')}</td><td>${until}</td>`+
+            `<td><button class="sm" onclick="${b.t==='IP'?`unbanIp('${esc(b.k)}')`:`unbanAcc(${b.k})`}">Разбан</button></td></tr>`;
+        }).join('') || '<tr><td colspan="5" style="color:#64748b">Банов нет</td></tr>');
+}
+
+// ---------- банворды
+function renderBanwords(){
+    const rows = (S.banwords||[]).map(w=>`<tr><td>${esc(w.w)}</td>`+
+        `<td><span class="badge ${w.a==='ban'?'b-ban':(w.a==='mute'?'b-warn':'b-idle')}">${w.a}</span></td>`+
+        `<td>${w.pin?'<span class="badge b-pin">закреплено</span>':''}</td>`+
+        `<td>${w.pin?'':'<button class="sm red" onclick="bwRemove(\'' + esc(w.w) + '\')">✕</button>'}</td></tr>`).join('');
+    document.getElementById('banwords').innerHTML =
+        '<tr><th>Слово</th><th>Действие</th><th></th><th></th></tr>' + (rows || '<tr><td colspan="4" style="color:#64748b">Список пуст</td></tr>');
+}
+function renderModset(){
+    const box = document.getElementById('modset');
+    if (!S.modset) return;
+    const labels = {enabled:'авто-модерация (1/0)', name_check:'проверка ника (1/0)',
+        mute_at:'варн → мут', ban_at:'варн → бан', permaban_at:'варн → вечный бан (0=выкл)',
+        mute_minutes:'мут, минут', ban_hours:'бан по варнам, часов (0=навсегда)',
+        auto_ban_hours:'бан за слова «ban», часов (0=навсегда)', warn_decay_h:'варн сгорает, часов',
+        flood_msgs:'антифлуд: сообщений за окно (0=выкл)', flood_window_s:'окно антифлуда, секунд',
+        flood_mute_min:'мут за флуд, минут (0=предупреждение)'};
+    if (box.dataset.sig === JSON.stringify(S.modset)) return;   // не затирать во время правки
+    box.dataset.sig = JSON.stringify(S.modset);
+    box.innerHTML = Object.keys(labels).map(k =>
+        `<label>${labels[k]}<input data-key="${k}" value="${esc(S.modset[k])}"></label>`).join('');
+}
+function renderChatlog(){
+    const f = document.getElementById('clog-filter').value;
+    const list = (S.chatlog||[]).filter(c => !f || c.act === f).slice(-150);
+    document.getElementById('chatlog').innerHTML = list.map(c=>{
+        const cls = 'a-'+(c.act||'ok');
+        return `<div class="clog"><span class="tm">${fmtWhen(c.ts)}</span>`+
+        `<span class="who ${cls}" title="${esc(c.ip||'')} [${esc(c.room||'лобби')}]" onclick="warnAid(${c.aid||0},'${esc(c.n)}')">${esc(c.n)}:</span>`+
+        `<span class="tx ${cls}">${esc(c.m)}</span>`+
+        `<span><span class="badge ${c.act==='ok'?'b-ok':'b-ban'}">${esc(c.act||'ok')}</span></span></div>`;
+    }).join('') || '<div style="color:#64748b;padding:10px">Пусто</div>';
+}
+function renderModlog(){
+    document.getElementById('modlog').innerHTML =
+        '<tr><th>Время</th><th>Источник</th><th>Действие</th><th>Кто</th><th>Детали</th></tr>' +
+        (S.modlog||[]).slice(-100).reverse().map(c=>`<tr><td>${fmtWhen(c.ts)}</td>`+
+        `<td><span class="badge ${c.src==='admin'?'b-play':'b-warn'}">${esc(c.src)}</span></td>`+
+        `<td><b>${esc(c.act)}</b></td><td>${esc(c.who)}</td><td>${esc(c.info||'')}</td></tr>`).join('') ||
+        '<tr><td colspan="5" style="color:#64748b">Пусто</td></tr>';
+}
+
+// ---------- правила/новости: не затирать, пока админ печатает
+function loadRulesBox(){
+    const box = document.getElementById('rules-edit');
+    if (document.activeElement === box) return;
+    box.value = (S && S.rules ? S.rules : []).map(r => r.text + (r.p ? ' | ' + r.p : '')).join('\n');
+}
+async function saveRules(){
+    const items = document.getElementById('rules-edit').value.split('\n')
+        .map(s => s.trim()).filter(Boolean)
+        .map(s => { const i = s.indexOf('|');
+            return i > 0 ? { text: s.slice(0, i).trim(), p: s.slice(i+1).trim() } : { text: s, p: '' }; });
+    try { await api('rules', { items }); toast('Правила обновлены — игроки увидят сразу'); }
+    catch(e){ toast(e.message); }
+}
+function loadNewsBox(){
+    const box = document.getElementById('news-edit');
+    if (document.activeElement === box) return;
+    box.value = (S && S.news ? S.news : []).map(n => (n.kind && n.kind !== 'info' ? '[' + n.kind + '] ' : '') + n.text).join('\n');
+}
+async function saveNews(){
+    const items = document.getElementById('news-edit').value.split('\n')
+        .map(s => s.trim()).filter(Boolean)
+        .map(s => { const m = s.match(/^\[(info|ok|bad|gift)\]\s*(.*)$/i);
+            return m ? { kind: m[1].toLowerCase(), text: m[2] } : { kind: 'info', text: s }; });
+    try { await api('news', { items }); toast('Новости обновлены — игроки увидят сразу'); }
+    catch(e){ toast(e.message); }
+}
+
+// ---------- действия
+async function act(path, body){ try{ await api(path, body); toast('Готово'); refresh(); }catch(e){ toast(e.message); } }
+async function kick(id){ try{ await api('kick',{id}); toast('Кикнут'); refresh(); }catch(e){ toast(e.message); } }
+async function kill(id){ try{ await api('kill',{id}); toast('Убит'); refresh(); }catch(e){ toast(e.message); } }
+async function move(id){ const r = prompt('В какую комнату? (DM/TDM/CTF/CP/SIEGE/ASLT/RGB/JUGG, пусто = лобби)', ''); if (r === null) return; await act('move', {id, room: r.trim()}); }
+async function pm(){ const id = +document.getElementById('pm-id').value || 0; const t = document.getElementById('pm-text').value.trim(); if (!id || !t) { toast('Нужны ID и текст'); return; } try{ await api('pm', {id, text:t}); document.getElementById('pm-text').value=''; toast('Отправлено'); }catch(e){ toast(e.message); } }
+async function pmTo(id, name){ const t = prompt('Личное сообщение для ' + name + ':'); if (!t) return; try{ await api('pm', {id, text:t}); toast('Отправлено'); }catch(e){ toast(e.message); } }
+function hoursVal(){ return +document.getElementById('ban-hours').value || 0; }
+function reasonVal(){ return document.getElementById('ban-reason').value; }
+async function banAcc(aid){ if (!aid) { toast('Нет аккаунта'); return; } const h = prompt('Часов (0 = навсегда):', '24'); if (h === null) return; await act('ban', {aid, hours: +h || 0, reason: reasonVal() || 'Нарушение правил'}); }
+async function unbanAcc(aid){ await act('unban',{aid}); }
+async function banIp(ip){ if(!ip) ip=document.getElementById('ban-ip').value.trim(); if(!ip){toast('Укажи IP');return;}
+    await act('ban',{ip, hours:+document.getElementById('ban-ip-hours').value||0, reason:document.getElementById('ban-ip-reason').value}); }
+async function unbanIp(ip){ await act('unban',{ip}); }
+async function roomClose(r){ if (!confirm('Закрыть комнату ' + r + '? Всех игроков выкинет в лобби.')) return; await act('roomclose',{room:r}); }
+async function warnAid(aid, name){ if (!aid) { toast('Нет аккаунта'); return; } const r = prompt('Причина предупреждения для ' + name + ':', 'Нарушение правил'); if (r === null) return; await act('warn', {aid, reason: r}); }
+async function clearWarns(aid){ await act('clearwarns', {aid}); }
+async function delAcc(aid, login){ if(!confirm('Удалить аккаунт '+login+'?')) return; await act('delacc',{aid}); }
+async function broadcast(){ const t=document.getElementById('bc-text').value.trim(); if(!t){toast('Пусто');return;} try{ await api('broadcast',{text:t}); document.getElementById('bc-text').value=''; toast('Отправлено'); }catch(e){ toast(e.message); } }
+async function save(){ try{ await api('save'); toast('Сохранено'); }catch(e){ toast(e.message); } }
+async function restartSrv(){
+    const v = prompt('Через сколько секунд перезапустить сервер? (игроки получат предупреждение)', '60');
+    if (v === null) return;
+    await act('restart', {delay: Math.max(0, +v || 0)});
+}
+async function cancelRestart(){ await act('restart', {cancel: true}); }
+async function muteAcc(aid){ const m = prompt('Мут чата на сколько минут? (0 = навсегда)', '30'); if (m === null) return; await act('mute', {aid, minutes: +m || 0}); }
+async function unmuteAcc(aid){ await act('unmute', {aid}); }
+async function giveCrystals(aid){ const v = prompt('Сколько кристаллов выдать игроку? (отрицательное — забрать)', '100'); if (v === null || !v.trim()) return; await act('crystals', {aid, amount: Math.round(+v || 0)}); }
+async function renameAcc(aid, old){ const n = prompt('Новое имя игрока', old); if (n === null || !n.trim()) return; await act('rename', {aid, name: n}); }
+async function banByName(){
+    const name = document.getElementById('ban-name').value.trim();
+    if (!name) { toast('Укажи имя'); return; }
+    const acc = (S.accounts||[]).find(a => a.login.toLowerCase() === name.toLowerCase() ||
+        String(a.name).toLowerCase() === name.toLowerCase() || String(a.id) === name);
+    if (!acc) { toast('Аккаунт не найден'); return; }
+    await act('ban', {aid: acc.id, hours: hoursVal(), reason: reasonVal() || 'Нарушение правил'});
+}
+async function warnByName(){
+    const name = document.getElementById('ban-name').value.trim();
+    if (!name) { toast('Укажи имя'); return; }
+    const acc = (S.accounts||[]).find(a => a.login.toLowerCase() === name.toLowerCase() ||
+        String(a.name).toLowerCase() === name.toLowerCase() || String(a.id) === name);
+    if (!acc) { toast('Аккаунт не найден'); return; }
+    warnAid(acc.id, acc.name);
+}
+// ---------- банворды: добавить/удалить/тест
+async function bwAdd(){
+    const w = document.getElementById('bw-word').value.trim();
+    const a = document.getElementById('bw-action').value;
+    if (!w) { toast('Пустое слово'); return; }
+    try { await api('banwords_add', {word: w, action: a}); document.getElementById('bw-word').value=''; toast('Слово добавлено'); refresh(); }
+    catch(e){ toast(e.message); }
+}
+async function bwRemove(w){
+    try { await api('banwords_remove', {word: w}); toast('Удалено'); refresh(); }
+    catch(e){ toast(e.message); }
+}
+async function bwTest(){
+    const t = document.getElementById('bw-test').value.trim();
+    const box = document.getElementById('bw-hits');
+    if (!t) { box.innerHTML=''; return; }
+    try {
+        const j = await api('banwords_test', {text: t});
+        box.innerHTML = j.hits && j.hits.length
+            ? `<div class="hit">🧪 Сработает: ${j.hits.map(h => `<b>${esc(h.w)}</b> (${esc(h.a)})`).join(', ')}</div>`
+            : '<div class="hit" style="border-color:#2a5a2a">🧪 Фильтр пропустит — запрещённых слов нет</div>';
+    } catch(e){ toast(e.message); }
+}
+async function modsetSave(){
+    const inputs = document.querySelectorAll('#modset input');
+    for (const inp of inputs) {
+        const k = inp.dataset.key;
+        const v = S.modset[k];
+        if (String(v) === inp.value.trim()) continue;
+        try { await api('modset', {key: k, value: inp.value.trim()}); }
+        catch(e){ toast(k + ': ' + e.message); }
+    }
+    toast('Настройки сохранены'); refresh();
+}
+
+(async () => { if (KEY()) { try { await refresh(true); document.getElementById('keybox').style.display='none'; document.getElementById('panel').style.display='block'; } catch(e){} } })();
+setInterval(() => { if (KEY() && document.getElementById('panel').style.display !== 'none') refresh(); }, 4000);
+</script>
+</body>
+</html>
